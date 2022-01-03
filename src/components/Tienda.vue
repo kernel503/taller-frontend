@@ -10,7 +10,7 @@
   >
     <template v-slot:top>
       <v-toolbar flat>
-        <v-toolbar-title>Producto</v-toolbar-title>
+        <v-toolbar-title>Realizar Venta</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
         <v-text-field
           v-model="search"
@@ -19,13 +19,7 @@
           single-line
           hide-details
         ></v-text-field>
-        <v-spacer></v-spacer>
         <v-dialog v-model="dialog" max-width="650px">
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" dark class="mb-2" v-bind="attrs" v-on="on">
-              Agregar producto
-            </v-btn>
-          </template>
           <v-card>
             <v-card-title>
               <span class="text-h5">{{ formTitle }}</span>
@@ -38,8 +32,8 @@
                   <v-row>
                     <v-col cols="12" sm="12" md="12">
                       <v-autocomplete
-                        :rules="enteroRegla"
                         :items="categorias"
+                        disabled
                         v-model="editedItem.categoria_id"
                         label="Categoria"
                         item-text="nombre"
@@ -48,6 +42,7 @@
                     </v-col>
                     <v-col cols="12" sm="12" md="12">
                       <v-text-field
+                        disabled
                         :rules="regla"
                         v-model="editedItem.nombre"
                         label="Nombre del producto"
@@ -55,23 +50,22 @@
                     </v-col>
                     <v-col cols="12" sm="12" md="12">
                       <v-text-field
-                        :rules="enteroRegla"
-                        v-model="editedItem.stock"
-                        label="Cantidad disponible"
+                        v-model="editedItem.cantidad"
+                        label="Cantidad a vender"
                       ></v-text-field>
                     </v-col>
-                    <v-col cols="12" sm="12" md="12">
+                    <v-col cols="6" sm="6" md="6">
                       <v-text-field
-                        :rules="floatRegla"
-                        v-model="editedItem.precio_compra"
-                        label="Precio compra"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" sm="12" md="12">
-                      <v-text-field
-                        :rules="floatRegla"
+                        disabled
                         v-model="editedItem.precio_venta"
                         label="Precio venta"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6" sm="6" md="6">
+                      <v-text-field
+                        disabled
+                        :value="importeCalculado"
+                        label="Importe"
                       ></v-text-field>
                     </v-col>
                   </v-row>
@@ -90,34 +84,19 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-        <v-dialog v-model="dialogDelete" max-width="500px">
-          <v-card>
-            <v-card-title class="text-h5">¿Desea eliminar este registro?</v-card-title>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="blue darken-1" text @click="closeDelete">Cancelar</v-btn>
-              <v-btn color="blue darken-1" text @click="deleteItemConfirm">Aceptar</v-btn>
-              <v-spacer></v-spacer>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
       </v-toolbar>
     </template>
-     <template v-slot:item.stock="{ item }">
-      <v-chip
-        :color="getColor(item.stock)"
-        dark
-      >
+    <template v-slot:item.stock="{ item }">
+      <v-chip :color="getColor(item.stock)" dark>
         {{ item.stock }}
       </v-chip>
     </template>
     <template v-slot:item.actions="{ item }">
-      <v-icon small class="mr-2" @click="editItem(item)">
-        mdi-pencil
-      </v-icon>
-      <v-icon small @click="deleteItem(item)">
-        mdi-delete
-      </v-icon>
+      <template v-if="item.stock">
+        <v-icon class="mr-2" @click="editItem(item)">
+          mdi-cart
+        </v-icon>
+      </template>
     </template>
     <template v-slot:no-data>
       <v-btn color="primary" @click="initialize">
@@ -128,26 +107,21 @@
 </template>
 <script>
 import { mapMutations } from 'vuex';
-import supabase from '../../supabase/index';
+import supabase from '../supabase/index';
 
 export default {
+  name: 'Tienda',
   data: () => ({
     valid: true,
     search: '',
     loading: false,
     regla: [(v) => !!v || 'Campo requerido'],
     enteroRegla: [
-      (v) => !!v || 'Campo requerido',
-      (v) => Number.isInteger(+v) || 'Debe ser un entero',
-      (v) => (+v >= 0) || 'Minimo es cero',
-    ],
-    floatRegla: [
-      (v) => !!v || 'Campo requerido',
-      (v) => !!+v || 'Debe ser un número',
-      (v) => +v > 0 || 'Debe ser mayor que cero',
+      (v) => !!v || 'Campo requerido!',
+      (v) => Number.isInteger(+v) || 'Debe ser un entero!',
+      (v) => +v > 0 || 'Debe ser mayor a cero!',
     ],
     dialog: false,
-    dialogDelete: false,
     headers: [
       {
         text: 'Identificador',
@@ -157,33 +131,43 @@ export default {
       },
       { text: 'Categoria', value: 'categoria.nombre' },
       { text: 'Nombre', value: 'nombre' },
-      { text: 'Precio compra $', value: 'precio_compra' },
       { text: 'Precio venta $', value: 'precio_venta' },
       { text: ' Stock', value: 'stock' },
-      { text: 'Acciones', value: 'actions', sortable: false },
+      {
+        text: 'Acciones',
+        value: 'actions',
+        sortable: false,
+        align: 'center',
+      },
     ],
     categorias: [],
     productos: [],
     editedIndex: -1,
     editedItem: {
-      categoria_id: '',
-      nombre: '',
-      precio_compra: '',
-      precio_venta: '',
-      stock: '',
+      producto_id: '',
+      cantidad: '',
+      precio_unitario: '',
+      importe: '',
     },
     defaultItem: {
-      categoria_id: '',
-      nombre: '',
-      precio_compra: '',
-      precio_venta: '',
-      stock: '',
+      producto_id: '',
+      cantidad: '',
+      precio_unitario: '',
+      importe: '',
     },
   }),
 
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? 'Nuevo producto' : 'Editar producto';
+      return this.editedIndex === -1 ? '' : 'Agregar venta';
+    },
+
+    importeCalculado() {
+      if (!this.editedItem.cantidad) return 0;
+
+      const importe = this.editedItem.precio_venta * this.editedItem.cantidad;
+
+      return Number.isNaN(importe) ? 0 : importe;
     },
   },
 
@@ -191,10 +175,6 @@ export default {
     dialog(val) {
       // eslint-disable-next-line no-unused-expressions
       val || this.close();
-    },
-    dialogDelete(val) {
-      // eslint-disable-next-line no-unused-expressions
-      val || this.closeDelete();
     },
   },
 
@@ -250,89 +230,64 @@ export default {
       this.dialog = true;
     },
 
-    deleteItem(item) {
-      this.editedIndex = this.productos.indexOf(item);
-      this.editedItem = { ...item };
-      this.dialogDelete = true;
-    },
-
-    async deleteItemConfirm() {
-      const { id } = this.editedItem;
-
-      // eslint-disable-next-line no-unused-vars
-      const { data, error } = await supabase
-        .from('producto')
-        .delete()
-        .match({ id });
-
-      if (error) {
-        this.SNACKBAR_UPDATE({ message: `Error en la petición! ${error.message}`, color: 'red' });
-      } else {
-        this.SNACKBAR_UPDATE({ message: 'Elemento eliminado!', color: 'indigo' });
-      }
-
-      this.initialize();
-      this.closeDelete();
-    },
-
     close() {
       this.dialog = false;
-      this.$nextTick(() => {
-        this.$refs.form.reset();
-        this.$refs.form.resetValidation();
-        this.editedItem = { ...this.defaultItem };
-        this.editedIndex = -1;
-      });
-    },
 
-    closeDelete() {
-      this.dialogDelete = false;
       this.$nextTick(() => {
+        // this.editedItem = { ...this.defaultItem };
         this.$refs.form.reset();
         this.$refs.form.resetValidation();
-        this.editedItem = { ...this.defaultItem };
         this.editedIndex = -1;
       });
     },
 
     getColor(cantidad) {
       if (cantidad <= 5) return 'red';
-      if (cantidad <= 10) return 'orange';
+      if (cantidad > 5 && cantidad <= 15) return 'orange';
       return 'green';
     },
 
     async save() {
       if (!this.formIsValid()) return;
 
-      let action = null;
+      const {
+        // eslint-disable-next-line camelcase
+        id, stock, cantidad, precio_venta,
+      } = this.editedItem;
 
-      if (this.editedIndex > -1) {
-        const {
-          // eslint-disable-next-line camelcase
-          id, nombre, precio_venta, precio_compra, categoria_id, stock,
-        } = this.editedItem;
-        action = await supabase
+      const stockCalculado = stock - cantidad;
+      // eslint-disable-next-line camelcase
+      const importe = +precio_venta * +cantidad;
+
+      if (cantidad > stock) {
+        this.SNACKBAR_UPDATE({
+          message: 'No hay suficiente producto en inventario!',
+          color: 'red',
+        });
+      } else {
+        // eslint-disable-next-line no-unused-vars
+        const { data, error } = await supabase
           .from('producto')
-          .update({
-            // eslint-disable-next-line camelcase
-            nombre, precio_venta: +precio_venta, precio_compra: +precio_compra, categoria_id, stock,
-          })
+          .update({ stock: stockCalculado })
           .match({ id });
-      } else {
-        action = await supabase.from('producto').insert([this.editedItem]);
+        // eslint-disable-next-line no-unused-vars
+        const { data: dataInsert, error: errorInsert } = await supabase
+          .from('venta')
+          .insert([{
+            producto_id: id, cantidad, precio_venta, importe,
+          }]);
+
+        if (error || errorInsert) {
+          this.SNACKBAR_UPDATE({
+            message: 'Error al guardar el registro',
+            color: 'red',
+          });
+        } else {
+          this.SNACKBAR_UPDATE({ message: 'Registros actualizados!', color: 'indigo' });
+          this.initialize();
+          this.close();
+        }
       }
-
-      // eslint-disable-next-line no-unused-vars
-      const { data, error } = action;
-
-      if (error) {
-        this.SNACKBAR_UPDATE({ message: `Error en la petición! ${error.message}`, color: 'red' });
-      } else {
-        this.SNACKBAR_UPDATE({ message: 'Registros actualizados!', color: 'indigo' });
-      }
-
-      this.initialize();
-      this.close();
     },
   },
 };

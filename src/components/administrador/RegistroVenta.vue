@@ -21,6 +21,11 @@
         ></v-text-field>
       </v-toolbar>
     </template>
+    <template v-slot:item.actions="{ item }">
+      <v-icon @click="eliminarRegistro(item)">
+        mdi-delete
+      </v-icon>
+    </template>
     <template v-slot:no-data>
       <v-btn color="primary" @click="initialize">
         Reset
@@ -43,11 +48,13 @@ export default {
         sortable: false,
         value: 'id',
       },
-      { text: 'Producto', value: 'producto.nombre' },
+      { text: 'Categoria', value: 'categoria' },
+      { text: 'Producto', value: 'producto' },
       { text: 'Cantidad vendido', value: 'cantidad' },
       { text: 'Precio venta', value: 'precio_venta' },
       { text: 'Importe $', value: 'importe' },
-      { text: 'Fecha venta', value: 'created_at' },
+      { text: 'Fecha venta', value: 'fecha_venta' },
+      { text: 'Eliminar', value: 'actions' },
     ],
     ventas: [],
   }),
@@ -63,9 +70,9 @@ export default {
       this.loading = true;
 
       const { data, error } = await supabase
-        .from('venta')
-        .select('producto (nombre), *')
-        .order('id', { ascending: true });
+        .from('ventas_realizadas')
+        .select()
+        .order('fecha_venta', { ascending: true });
 
       if (error) {
         this.productos = [];
@@ -78,6 +85,25 @@ export default {
       this.$nextTick(() => {
         this.loading = false;
       });
+    },
+
+    async eliminarRegistro(venta) {
+      const { id } = venta;
+      // eslint-disable-next-line no-alert
+      const eliminar = window.confirm(`¿Desea eliminar el registro ${id}?`);
+      if (eliminar) {
+        // eslint-disable-next-line no-unused-vars
+        const { data, error } = await supabase
+          .from('venta')
+          .delete()
+          .match({ id });
+
+        if (error) {
+          this.SNACKBAR_UPDATE({ message: `Error en la petición! ${error.message}`, color: 'red' });
+        } else {
+          this.initialize();
+        }
+      }
     },
   },
 };

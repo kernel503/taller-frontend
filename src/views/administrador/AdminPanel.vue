@@ -1,7 +1,7 @@
 <template lang="">
   <div>
     <p class="font-weight-black">
-      Solo lo verá el administrador
+     Administrador
     </p>
     <router-view></router-view>
   </div>

@@ -50,7 +50,7 @@
             <v-icon dark>mdi-group</v-icon>
           </v-list-item-icon>
           <v-list-item-content>
-            <v-list-item-title>Categoria</v-list-item-title>
+            <v-list-item-title>Categorias</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
 
@@ -59,7 +59,7 @@
             <v-icon dark>mdi-tools</v-icon>
           </v-list-item-icon>
           <v-list-item-content>
-            <v-list-item-title>Producto</v-list-item-title>
+            <v-list-item-title>Productos</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
 
@@ -68,7 +68,7 @@
             <v-icon dark>mdi-cash</v-icon>
           </v-list-item-icon>
           <v-list-item-content>
-            <v-list-item-title>Venta</v-list-item-title>
+            <v-list-item-title>Ventas Realizadas</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
 

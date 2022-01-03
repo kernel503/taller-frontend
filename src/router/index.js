@@ -6,6 +6,25 @@ Vue.use(VueRouter);
 
 const routes = [
   {
+    path: '/administrador',
+    component: () => import(/* webpackChunkName: "about" */ '../views/administrador/AdminPanel.vue'),
+    children: [
+      {
+        // UserProfile will be rendered inside User's <router-view>
+        // when /user/:id/profile is matched
+        path: 'categoria',
+        component: () => import(/* webpackChunkName: "about" */ '../components/administrador/Categoria.vue'),
+      },
+      {
+        // UserPosts will be rendered inside User's <router-view>
+        // when /user/:id/posts is matched
+        path: 'producto',
+        component: () => import(/* webpackChunkName: "about" */ '../components/administrador/Producto.vue'),
+
+      },
+    ],
+  },
+  {
     path: '/',
     name: 'Home',
     component: Home,

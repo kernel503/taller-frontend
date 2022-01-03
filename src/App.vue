@@ -1,10 +1,6 @@
 <template>
   <v-app>
-    <v-app-bar
-      app
-      color="primary"
-      dark
-    >
+    <v-app-bar app color="primary" dark>
       <div class="d-flex align-center">
         <v-img
           alt="Vuetify Logo"
@@ -27,40 +23,38 @@
 
       <v-spacer></v-spacer>
 
-      <v-btn
-        href="https://github.com/vuetifyjs/vuetify/releases/latest"
-        target="_blank"
-        text
-      >
+      <v-btn href="https://github.com/vuetifyjs/vuetify/releases/latest" target="_blank" text>
         <span class="mr-2">Latest Release</span>
         <v-icon>mdi-open-in-new</v-icon>
       </v-btn>
     </v-app-bar>
 
     <v-main>
-      <router-view/>
+      <v-container>
+        <router-view />
+      </v-container>
+      <v-snackbar
+        timeout="3000"
+        dark
+        right
+        bottom
+        v-model="snackbarState.show"
+        :color="snackbarState.color"
+      >
+        {{ snackbarState.message }}
+      </v-snackbar>
     </v-main>
   </v-app>
 </template>
 
 <script>
-import supabase from './supabase/index';
+import { mapGetters } from 'vuex';
 
 export default {
-  name: 'App',
-
-  data: () => ({
-    //
-  }),
-  mounted() {
-    (async function logData() {
-      console.log(process.env);
-      const { data, error } = await supabase
-        .from('categoria')
-        .select();
-
-      console.log(data, error);
-    }());
+  computed: {
+    ...mapGetters([
+      'snackbarState',
+    ]),
   },
 };
 </script>

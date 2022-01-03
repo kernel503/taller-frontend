@@ -13,16 +13,23 @@ const routes = [
         // UserProfile will be rendered inside User's <router-view>
         // when /user/:id/profile is matched
         path: 'categoria',
+        name: 'categoria',
         component: () => import(/* webpackChunkName: "about" */ '../components/administrador/Categoria.vue'),
       },
       {
         // UserPosts will be rendered inside User's <router-view>
         // when /user/:id/posts is matched
         path: 'producto',
+        name: 'producto',
         component: () => import(/* webpackChunkName: "about" */ '../components/administrador/Producto.vue'),
 
       },
     ],
+  },
+  {
+    path: '/tienda',
+    name: 'tienda',
+    component: Home,
   },
   {
     path: '/',

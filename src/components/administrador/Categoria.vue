@@ -1,5 +1,5 @@
 <template>
-  <v-data-table :headers="headers" :items="categorias" sort-by="calories" class="elevation-1">
+  <v-data-table :headers="headers" :items="categorias" class="elevation-1" :loading="loading">
     <template v-slot:top>
       <v-toolbar flat>
         <v-toolbar-title>Categoria</v-toolbar-title>
@@ -78,6 +78,7 @@ import supabase from '../../supabase/index';
 export default {
   data: () => ({
     valid: true,
+    loading: false,
     categoriaRules: [(v) => !!v || 'Nombre de categoria es requerido'],
     dialog: false,
     dialogDelete: false,
@@ -123,12 +124,14 @@ export default {
   },
 
   methods: {
-    ...mapMutations([
-      'SNACKBAR_UPDATE',
-    ]),
+    ...mapMutations(['SNACKBAR_UPDATE']),
 
     async initialize() {
-      const { data, error } = await supabase.from('categoria').select().order('id', { ascending: true });
+      this.loading = true;
+      const { data, error } = await supabase
+        .from('categoria')
+        .select()
+        .order('id', { ascending: true });
 
       this.categorias = data;
 
@@ -136,6 +139,10 @@ export default {
         this.categorias = [];
         this.SNACKBAR_UPDATE({ message: `Error en la petición! ${error.message}`, color: 'red' });
       }
+
+      this.$nextTick(() => {
+        this.loading = false;
+      });
     },
 
     formIsValid() {

@@ -1,19 +1,33 @@
 <template>
-  <v-data-table :headers="headers" :items="categorias" sort-by="calories" class="elevation-1">
+  <v-data-table
+    :headers="headers"
+    :items="categorias"
+    class="elevation-1"
+    :loading="loading"
+    :search="search"
+  >
     <template v-slot:top>
       <v-toolbar flat>
         <v-toolbar-title>Producto</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
+        <v-text-field
+          v-model="search"
+          append-icon="mdi-magnify"
+          label="Buscar"
+          single-line
+          hide-details
+        ></v-text-field>
         <v-spacer></v-spacer>
         <v-dialog v-model="dialog" max-width="500px">
           <template v-slot:activator="{ on, attrs }">
             <v-btn color="primary" dark class="mb-2" v-bind="attrs" v-on="on">
-              Agregar categoria
+              Agregar producto
             </v-btn>
           </template>
           <v-card>
             <v-card-title>
               <span class="text-h5">{{ formTitle }}</span>
+              <v-spacer></v-spacer>
             </v-card-title>
 
             <v-card-text>
@@ -78,6 +92,8 @@ import supabase from '../../supabase/index';
 export default {
   data: () => ({
     valid: true,
+    search: '',
+    loading: false,
     categoriaRules: [(v) => !!v || 'Nombre de categoria es requerido'],
     dialog: false,
     dialogDelete: false,
@@ -88,7 +104,11 @@ export default {
         sortable: false,
         value: 'id',
       },
+      { text: 'Categoria', value: 'categoria.nombre' },
       { text: 'Nombre', value: 'nombre' },
+      { text: 'Precio compra $', value: 'precio_compra' },
+      { text: 'Precio venta $', value: 'precio_venta' },
+      { text: 'Stock', value: 'stock' },
       { text: 'Acciones', value: 'actions', sortable: false },
     ],
     categorias: [],
@@ -123,19 +143,32 @@ export default {
   },
 
   methods: {
-    ...mapMutations([
-      'SNACKBAR_UPDATE',
-    ]),
+    ...mapMutations(['SNACKBAR_UPDATE']),
 
     async initialize() {
-      const { data, error } = await supabase.from('categoria').select().order('id', { ascending: true });
-
+      this.loading = true;
+      const { data, error } = await supabase
+        .from('producto')
+        .select('categoria (nombre), *')
+        .order('id', { ascending: true });
+      console.log(data, error);
       this.categorias = data;
 
-      if (error) {
-        this.categorias = [];
-        this.SNACKBAR_UPDATE({ message: `Error en la petición! ${error.message}`, color: 'red' });
-      }
+      this.$nextTick(() => {
+        this.loading = false;
+      });
+
+      // const { data, error } = await supabase
+      //   .from('categoria')
+      //   .select()
+      //   .order('id', { ascending: true })
+
+      // this.categorias = data
+
+      // if (error) {
+      //   this.categorias = []
+      //   this.SNACKBAR_UPDATE({ message: `Error en la petición! ${error.message}`, color: 'red' })
+      // }
     },
 
     formIsValid() {

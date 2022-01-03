@@ -78,7 +78,6 @@ export default {
         this.productos = [];
         this.SNACKBAR_UPDATE({ message: `Error en la petición! ${error.message}`, color: 'red' });
       } else {
-        console.log(data);
         this.ventas = data;
       }
 

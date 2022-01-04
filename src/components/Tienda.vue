@@ -52,6 +52,7 @@
                       <v-text-field
                         v-model="editedItem.cantidad"
                         label="Cantidad a vender"
+                        :rules="enteroRegla"
                       ></v-text-field>
                     </v-col>
                     <v-col cols="6" sm="6" md="6">

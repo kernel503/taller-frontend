@@ -71,8 +71,7 @@ export default {
 
       const { data, error } = await supabase
         .from('ventas_realizadas')
-        .select()
-        .order('fecha_venta', { ascending: true });
+        .select();
 
       if (error) {
         this.productos = [];

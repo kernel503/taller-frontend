@@ -168,7 +168,7 @@ export default {
 
       const importe = this.editedItem.precio_venta * this.editedItem.cantidad;
 
-      return Number.isNaN(importe) ? 0 : importe;
+      return Number.isNaN(importe) ? 0 : importe.toFixed(2);
     },
   },
 
@@ -258,7 +258,7 @@ export default {
 
       const stockCalculado = stock - cantidad;
       // eslint-disable-next-line camelcase
-      const importe = +precio_venta * +cantidad;
+      const importe = (+precio_venta * +cantidad).toFixed(2);
 
       if (cantidad > stock) {
         this.SNACKBAR_UPDATE({

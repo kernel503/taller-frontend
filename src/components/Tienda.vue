@@ -50,6 +50,13 @@
                     </v-col>
                     <v-col cols="12" sm="12" md="12">
                       <v-text-field
+                        :rules="regla"
+                        v-model="editedItem.nombre_cliente"
+                        label="Nombre del cliente"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" sm="12" md="12">
+                      <v-text-field
                         v-model="editedItem.cantidad"
                         label="Cantidad a vender"
                         :rules="enteroRegla"
@@ -116,7 +123,7 @@ export default {
     valid: true,
     search: '',
     loading: false,
-    regla: [(v) => !!v || 'Campo requerido'],
+    regla: [(v) => !!v || 'Campo requerido!', (v) => (!!v && !!v.trim()) || 'Debe ser un texto!'],
     enteroRegla: [
       (v) => !!v || 'Campo requerido!',
       (v) => Number.isInteger(+v) || 'Debe ser un entero!',
@@ -149,12 +156,14 @@ export default {
       cantidad: '',
       precio_unitario: '',
       importe: '',
+      nombre_cliente: '',
     },
     defaultItem: {
       producto_id: '',
       cantidad: '',
       precio_unitario: '',
       importe: '',
+      nombre_cliente: '',
     },
   }),
 
@@ -253,7 +262,13 @@ export default {
 
       const {
         // eslint-disable-next-line camelcase
-        id, stock, cantidad, precio_venta,
+        id,
+        stock,
+        cantidad,
+        // eslint-disable-next-line camelcase
+        precio_venta,
+        // eslint-disable-next-line camelcase
+        nombre_cliente,
       } = this.editedItem;
 
       const stockCalculado = stock - cantidad;
@@ -272,11 +287,15 @@ export default {
           .update({ stock: stockCalculado })
           .match({ id });
         // eslint-disable-next-line no-unused-vars
-        const { data: dataInsert, error: errorInsert } = await supabase
-          .from('venta')
-          .insert([{
-            producto_id: id, cantidad, precio_venta, importe,
-          }]);
+        const { data: dataInsert, error: errorInsert } = await supabase.from('venta').insert([
+          {
+            producto_id: id,
+            cantidad,
+            precio_venta,
+            importe,
+            nombre_cliente: nombre_cliente.trim(),
+          },
+        ]);
 
         if (error || errorInsert) {
           this.SNACKBAR_UPDATE({
